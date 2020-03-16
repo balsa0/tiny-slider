@@ -377,7 +377,6 @@ export var tns = function(options) {
         'error': onImgFailed
       },
       imgsComplete,
-      liveregionCurrent,
       preventScroll = options.preventScrollOnTouch === 'force' ? true : false;
 
   // controls
@@ -994,13 +993,13 @@ export var tns = function(options) {
   }
 
   function initTools () {
+    console.log("container", container);
     // == slides ==
     updateSlideStatus();
 
     // == live region ==
-    outerWrapper.insertAdjacentHTML('afterbegin', '<div class="tns-liveregion tns-visually-hidden" aria-live="polite" aria-atomic="true">slide <span class="current">' + getLiveRegionStr() + '</span>  of ' + slideCount + '</div>');
-    liveregionCurrent = outerWrapper.querySelector('.tns-liveregion .current');
-
+    container.setAttribute('aria-live', 'off');
+    container.setAttribute('aria-atomic', 'false');
     // == autoplayInit ==
     if (hasAutoplay) {
       var txt = autoplay ? 'stop' : 'start';
@@ -1139,7 +1138,8 @@ export var tns = function(options) {
 
     if (touch) { addEvents(container, touchEvents, options.preventScrollOnTouch); }
     if (mouseDrag) { addEvents(container, dragEvents); }
-    if (arrowKeys) { addEvents(doc, docmentKeydownEvent); }
+    // if (arrowKeys) { addEvents(doc, docmentKeydownEvent); }
+    if (arrowKeys) { addEvents(container, docmentKeydownEvent); }
 
     if (nested === 'inner') {
       events.on('outerResized', function () {
@@ -1174,7 +1174,7 @@ export var tns = function(options) {
     removeEvents(win, {'resize': onResize});
 
     // arrowKeys, controls, nav
-    if (arrowKeys) { removeEvents(doc, docmentKeydownEvent); }
+    if (arrowKeys) { removeEvents(container, docmentKeydownEvent); }
     if (controlsContainer) { removeEvents(controlsContainer, controlsEvents); }
     if (navContainer) { removeEvents(navContainer, navEvents); }
 
@@ -1358,8 +1358,8 @@ export var tns = function(options) {
 
     if (arrowKeys !== arrowKeysTem) {
       arrowKeys ?
-        addEvents(doc, docmentKeydownEvent) :
-        removeEvents(doc, docmentKeydownEvent);
+        addEvents(container, docmentKeydownEvent) :
+        removeEvents(container, docmentKeydownEvent);
     }
     if (controls !== controlsTem) {
       if (controls) {
@@ -1451,7 +1451,6 @@ export var tns = function(options) {
     } else if (fixedWidth || autoWidth) {
       doLazyLoad();
       updateSlideStatus();
-      updateLiveRegion();
     }
 
     if (itemsChanged && !carousel) { updateGallerySlidePositions(); }
@@ -1698,18 +1697,6 @@ export var tns = function(options) {
     disabled = false;
   }
 
-  function updateLiveRegion () {
-    var str = getLiveRegionStr();
-    if (liveregionCurrent.innerHTML !== str) { liveregionCurrent.innerHTML = str; }
-  }
-
-  function getLiveRegionStr () {
-    var arr = getVisibleSlideRange(),
-        start = arr[0] + 1,
-        end = arr[1] + 1;
-    return start === end ? start + '' : start + ' to ' + end;
-  }
-
   function getVisibleSlideRange (val) {
     if (val == null) { val = getContainerTransformValue(); }
     var start = index, end, rangestart, rangeend;
@@ -1869,7 +1856,6 @@ export var tns = function(options) {
   function additionalUpdates () {
     doLazyLoad();
     updateSlideStatus();
-    updateLiveRegion();
     updateControlsStatus();
     updateNavStatus();
   }
@@ -2401,11 +2387,13 @@ export var tns = function(options) {
 
   function startAutoplay () {
     setAutoplayTimer();
+    container.setAttribute('aria-live', 'off');
     if (autoplayButton) { updateAutoplayButton('stop', autoplayText[1]); }
   }
 
   function stopAutoplay () {
     stopAutoplayTimer();
+    container.setAttribute('aria-live', 'polite');
     if (autoplayButton) { updateAutoplayButton('start', autoplayText[0]); }
   }
 
@@ -2461,6 +2449,7 @@ export var tns = function(options) {
 
   // keydown events on document
   function onDocumentKeydown (e) {
+    console.log("inside onDocumentKeydown");
     e = getEvent(e);
     var keyIndex = [KEYS.LEFT, KEYS.RIGHT].indexOf(e.keyCode);
 
