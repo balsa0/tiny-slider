@@ -2805,15 +2805,20 @@ var tns = function(options) {
   // autoplay functions
   function setAutoplayTimer () {
     console.log("inside setAutoplayTimer");
-    autoplayTimer = setInterval(function () {
-      onControlsClick(null, autoplayDirection);
-    }, autoplayTimeout);
-
+    if (!autoplayTimer) {
+      autoplayTimer = setInterval(function () {
+        onControlsClick(null, autoplayDirection);
+      }, autoplayTimeout);
+    }
+    
     animating = true;
   }
 
   function stopAutoplayTimer () {
-    clearInterval(autoplayTimer);
+    console.log("inside stopAutoplayTimer");
+    if (autoplayTimer) {
+      autoplayTimer = clearInterval(autoplayTimer);
+    }
     animating = false;
   }
 
@@ -2871,9 +2876,14 @@ var tns = function(options) {
   }
 
   function mouseoverPause () {
+    console.log("inside mouseoverPause");
     if (animating) {
+      console.log("@@@@@@@@@@@ is animating!");
       stopAutoplayTimer();
       autoplayHoverPaused = true;
+    }
+    else {
+      console.log("%%%%%%%%%%%%%%%%%%%% is not animating!");
     }
   }
 
@@ -2958,11 +2968,19 @@ var tns = function(options) {
   }
 
   function onPanStart (e) {
+    console.log("inside onPanStart");
+    console.log("running", running);
+    console.log("autoplay", autoplay);
+    console.log("animating", animating);
+    console.log("rafIndex", rafIndex);
+    console.log("carousel", carousel);
+    
     if (running) {
       if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
     }
 
-    if (autoplay && animating) { stopAutoplayTimer(); }
+    // if (autoplay && animating) { stopAutoplayTimer(); }
+    stopAutoplayTimer();
 
     panStart = true;
     if (rafIndex) {
@@ -3036,6 +3054,7 @@ var tns = function(options) {
   }
 
   function onPanEnd (e) {
+    console.log("inside onPanEnd");
     if (panStart) {
       if (rafIndex) {
         caf(rafIndex);
