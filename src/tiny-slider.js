@@ -362,6 +362,7 @@ export var tns = function(options) {
         'mousedown': onPanStart,
         'mousemove': onPanMove,
         'mouseup': onPanEnd,
+        // 'mouseup': onPanEnd
         'mouseleave': onPanEnd
       },
       hasControls = hasOption('controls'),
@@ -994,6 +995,8 @@ export var tns = function(options) {
 
   function initTools () {
     console.log("container", container);
+    console.log("outerWrapper", outerWrapper);
+    console.log("containerParent", containerParent);
     // == slides ==
     updateSlideStatus();
 
@@ -1139,7 +1142,8 @@ export var tns = function(options) {
     if (touch) { addEvents(container, touchEvents, options.preventScrollOnTouch); }
     if (mouseDrag) { addEvents(container, dragEvents); }
     // if (arrowKeys) { addEvents(doc, docmentKeydownEvent); }
-    if (arrowKeys) { addEvents(container, docmentKeydownEvent); }
+    // if (arrowKeys) { addEvents(container, docmentKeydownEvent); }
+    if (arrowKeys) { addEvents(outerWrapper, docmentKeydownEvent); }
 
     if (nested === 'inner') {
       events.on('outerResized', function () {
@@ -2368,6 +2372,7 @@ export var tns = function(options) {
 
   // autoplay functions
   function setAutoplayTimer () {
+    console.log("inside setAutoplayTimer");
     autoplayTimer = setInterval(function () {
       onControlsClick(null, autoplayDirection);
     }, autoplayTimeout);
@@ -2441,7 +2446,8 @@ export var tns = function(options) {
   }
 
   function mouseoutRestart () {
-    if (autoplayHoverPaused) {
+    console.log("inside mouseoutRestart");
+    if (autoplayHoverPaused && !autoplayUserPaused) {
       setAutoplayTimer();
       autoplayHoverPaused = false;
     }
@@ -2658,7 +2664,7 @@ export var tns = function(options) {
     // reset
     if (options.preventScrollOnTouch === 'auto') { preventScroll = false; }
     if (swipeAngle) { moveDirectionExpected = '?'; }
-    if (autoplay && !animating) { setAutoplayTimer(); }
+    if (autoplay && !animating && !autoplayUserPaused) { setAutoplayTimer(); }
   }
 
   // === RESIZE FUNCTIONS === //
