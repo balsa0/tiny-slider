@@ -2885,6 +2885,7 @@ var tns = function(options) {
     else {
       console.log("%%%%%%%%%%%%%%%%%%%% is not animating!");
     }
+    updateAutoplayButton('start', autoplayText[0]);
   }
 
   function mouseoutRestart () {
@@ -2892,6 +2893,7 @@ var tns = function(options) {
     if (autoplayHoverPaused && !autoplayUserPaused) {
       setAutoplayTimer();
       autoplayHoverPaused = false;
+      updateAutoplayButton('stop', autoplayText[1]);
     }
   }
 
