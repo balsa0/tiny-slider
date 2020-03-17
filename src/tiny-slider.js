@@ -721,8 +721,7 @@ export var tns = function(options) {
       if (!item.id) { item.id = slideId + '-item' + i; }
       if (!carousel && animateNormal) { addClass(item, animateNormal); }
       setAttrs(item, {
-        'aria-hidden': 'true',
-        'tabindex': '-1'
+        'aria-hidden': 'true'
       });
     });
 
@@ -1918,15 +1917,14 @@ export var tns = function(options) {
       // show slides
       if (i >= start && i <= end) {
         if (hasAttr(item, 'aria-hidden')) {
-          removeAttrs(item, ['aria-hidden', 'tabindex']);
+          removeAttrs(item, ['aria-hidden']);
           addClass(item, slideActiveClass);
         }
       // hide slides
       } else {
         if (!hasAttr(item, 'aria-hidden')) {
           setAttrs(item, {
-            'aria-hidden': 'true',
-            'tabindex': '-1'
+            'aria-hidden': 'true'
           });
           removeClass(item, slideActiveClass);
         }
@@ -2103,6 +2101,7 @@ export var tns = function(options) {
   }
 
   function animateSlide (number, classOut, classIn, isOut) {
+    console.log("inside animateSlide");
     var l = number + items;
     if (!loop) { l = Math.min(l, slideCountNew); }
 
@@ -2162,6 +2161,7 @@ export var tns = function(options) {
   })();
 
   function render (e, sliderMoved) {
+    console.log("inside render");
     if (updateIndexBeforeTransform) { updateIndex(); }
 
     // render when slider was moved (touch or drag) even though index may not change
@@ -2175,6 +2175,7 @@ export var tns = function(options) {
       if (animating && e && ['click', 'keydown'].indexOf(e.type) >= 0) { stopAutoplay(); }
 
       running = true;
+      container.classList.add('tns-animating');
       transformCore();
     }
   }
@@ -2199,10 +2200,12 @@ export var tns = function(options) {
   // 5. lazyload images
   // 6. update container height
   function onTransitionEnd (event) {
+    console.log("inside onTransitionEnd");
     // check running on gallery mode
     // make sure trantionend/animationend events run only once
     if (carousel || running) {
       events.emit('transitionEnd', info(event));
+      container.classList.remove('tns-animating');
 
       if (!carousel && slideItemsOut.length > 0) {
         for (var i = 0; i < slideItemsOut.length; i++) {
@@ -2252,6 +2255,7 @@ export var tns = function(options) {
 
   // # ACTIONS
   function goTo (targetIndex, e) {
+    console.log("inside goTo");
     if (freeze) { return; }
 
     // prev slideBy
@@ -2310,6 +2314,7 @@ export var tns = function(options) {
 
   // on controls click
   function onControlsClick (e, dir) {
+    console.log("inside onControlsClick");
     if (running) {
       if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
     }
