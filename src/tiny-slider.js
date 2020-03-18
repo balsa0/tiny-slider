@@ -2175,6 +2175,7 @@ export var tns = function(options) {
       if (animating && e && ['click', 'keydown'].indexOf(e.type) >= 0) { stopAutoplay(); }
 
       running = true;
+      container.setAttribute('aria-live', 'off');
       container.classList.add('tns-animating');
       transformCore();
     }
@@ -2201,11 +2202,15 @@ export var tns = function(options) {
   // 6. update container height
   function onTransitionEnd (event) {
     console.log("inside onTransitionEnd");
+    console.log("autoplayUserPaused", autoplayUserPaused);
     // check running on gallery mode
     // make sure trantionend/animationend events run only once
     if (carousel || running) {
       events.emit('transitionEnd', info(event));
       container.classList.remove('tns-animating');
+      if (autoplayUserPaused) {
+        container.setAttribute('aria-live', 'polite');
+      }
 
       if (!carousel && slideItemsOut.length > 0) {
         for (var i = 0; i < slideItemsOut.length; i++) {
@@ -2319,17 +2324,20 @@ export var tns = function(options) {
       if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
     }
     var passEventObject;
-
+    console.log("dir", dir);
     if (!dir) {
+      console.log("inside not-dir. probably either prev or next button clicked");
       e = getEvent(e);
       var target = getTarget(e);
 
       while (target !== controlsContainer && [prevButton, nextButton].indexOf(target) < 0) { target = target.parentNode; }
 
       var targetIn = [prevButton, nextButton].indexOf(target);
+      console.log("targetIn", targetIn);
       if (targetIn >= 0) {
         passEventObject = true;
         dir = targetIn === 0 ? -1 : 1;
+        console.log("now dir", dir);
       }
     }
 
@@ -2483,6 +2491,7 @@ export var tns = function(options) {
 
   // on key control
   function onControlsKeydown (e) {
+    console.log("inside onControlsKeydown");
     e = getEvent(e);
     var keyIndex = [KEYS.LEFT, KEYS.RIGHT].indexOf(e.keyCode);
 
@@ -2502,6 +2511,7 @@ export var tns = function(options) {
 
   // on key nav
   function onNavKeydown (e) {
+    console.log("inside onNavKeydown");
     e = getEvent(e);
     var curElement = doc.activeElement;
     if (!hasAttr(curElement, 'data-nav')) { return; }
@@ -2543,6 +2553,8 @@ export var tns = function(options) {
   }
 
   function onPanStart (e) {
+    container.setAttribute('aria-live', 'off');
+    container.classList.add('tns-animating');
     console.log("inside onPanStart");
     console.log("running", running);
     console.log("autoplay", autoplay);
