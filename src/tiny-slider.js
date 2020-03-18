@@ -1704,6 +1704,7 @@ export var tns = function(options) {
   }
 
   function getVisibleSlideRange (val) {
+    console.log("inside getVisibleSlideRange");
     if (val == null) { val = getContainerTransformValue(); }
     var start = index, end, rangestart, rangeend;
 
@@ -1912,6 +1913,7 @@ export var tns = function(options) {
 
   // update slide
   function updateSlideStatus () {
+    console.log("inside updateSlideStatus");
     var range = getVisibleSlideRange(),
         start = range[0],
         end = range[1];
