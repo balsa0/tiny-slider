@@ -1000,10 +1000,10 @@ export var tns = function(options) {
     updateSlideStatus();
 
     // == live region ==
-    container.setAttribute('aria-live', 'off');
     container.setAttribute('aria-atomic', 'false');
     // == autoplayInit ==
     if (hasAutoplay) {
+      container.setAttribute('aria-live', 'off');
       var txt = autoplay ? 'stop' : 'start';
       if (autoplayButton) {
         setAttrs(autoplayButton, {'data-action': txt});
@@ -1022,6 +1022,9 @@ export var tns = function(options) {
         if (autoplayHoverPause) { addEvents(container, hoverEvents); }
         if (autoplayResetOnVisibility) { addEvents(container, visibilityEvent); }
       }
+    }
+    else {
+      container.setAttribute('aria-live', 'polite');
     }
 
     // == navInit ==
@@ -2203,12 +2206,13 @@ export var tns = function(options) {
   function onTransitionEnd (event) {
     console.log("inside onTransitionEnd");
     console.log("autoplayUserPaused", autoplayUserPaused);
+    console.log("animating", animating);
     // check running on gallery mode
     // make sure trantionend/animationend events run only once
     if (carousel || running) {
       events.emit('transitionEnd', info(event));
       container.classList.remove('tns-animating');
-      if (autoplayUserPaused) {
+      if (!animating) {
         container.setAttribute('aria-live', 'polite');
       }
 
