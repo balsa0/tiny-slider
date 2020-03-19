@@ -720,9 +720,13 @@ export var tns = function(options) {
     forEach(slideItems, function(item, i) {
       addClass(item, 'tns-item');
       if (!item.id) { item.id = slideId + '-item' + i; }
-      if (!carousel && animateNormal) { addClass(item, animateNormal); }
+      if (!carousel && animateNormal) {
+        addClass(item, animateNormal);
+      }
       setAttrs(item, {
-        'aria-hidden': 'true'
+        'aria-hidden': 'true',
+        'aria-roledescription': 'slide',
+        'aria-label': '' + (i + 1) + ' of ' + slideItems.length
       });
     });
 
