@@ -340,7 +340,7 @@ export var tns = function(options) {
       freeze = freezable && !autoWidth ? getFreeze() : false,
       frozen = false,
       controlsEvents = {
-        'click': onControlsClick,
+        'click': onPrevNextClick,
         'keydown': onControlsKeydown
       },
       navEvents = {
@@ -2256,7 +2256,10 @@ export var tns = function(options) {
           }
         }
 
-        if (nested === 'inner') { events.emit('innerLoaded', info()); }
+        if (nested === 'inner') {
+          events.emit('innerLoaded', info());
+        }
+        
         running = false;
         indexCached = index;
       }
@@ -2323,11 +2326,23 @@ export var tns = function(options) {
     }
   }
 
-  // on controls click
+  function onPrevNextClick (e, dir) {
+    console.log("inside onPrevNextClick");
+    pause();
+    onControlsClick(e,dir);
+  }
+  
+  // on controls click - badly named because it is triggered not only by user click, but also by automatisms
   function onControlsClick (e, dir) {
     console.log("inside onControlsClick");
+    // pause();
     if (running) {
-      if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
+      if (preventActionWhenRunning) {
+        return;
+      }
+      else {
+        onTransitionEnd();
+      }
     }
     var passEventObject;
     console.log("dir", dir);
@@ -2367,8 +2382,15 @@ export var tns = function(options) {
 
   // on nav click
   function onNavClick (e) {
+    console.log("inside onNavClick");
+    pause();
     if (running) {
-      if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
+      if (preventActionWhenRunning) {
+        return;
+      }
+      else {
+        onTransitionEnd();
+      }
     }
 
     e = getEvent(e);
@@ -2562,11 +2584,13 @@ export var tns = function(options) {
     container.setAttribute('aria-live', 'off');
     container.classList.add('tns-animating');
     console.log("inside onPanStart");
-    console.log("running", running);
     console.log("autoplay", autoplay);
     console.log("animating", animating);
+    console.log("running", running);
+    console.log("preventActionWhenRunning", preventActionWhenRunning);
     console.log("rafIndex", rafIndex);
     console.log("carousel", carousel);
+    
     
     if (running) {
       if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
