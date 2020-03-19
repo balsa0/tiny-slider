@@ -835,8 +835,8 @@ var tns = function(options) {
         navCurrentIndex = getCurrentNavIndex(),
         navCurrentIndexCached = navCurrentIndex,
         navActiveClass = 'tns-nav-active',
-        navStr = 'Carousel Page ',
-        navStrCurrent = ' (Current Slide)';
+        navStr = 'carousel page ',
+        navStrCurrent = ' (current slide)';
   }
 
   // autoplay
@@ -1487,9 +1487,9 @@ var tns = function(options) {
             hiddenStr = navAsThumbnails ? '' : 'style="display:none"';
         for (var i = 0; i < slideCount; i++) {
           // hide nav items by default
-          navHtml += '<button type="button" data-nav="' + i +'" tabindex="-1" aria-controls="' + slideId + '" ' + hiddenStr + ' aria-label="' + navStr + (i + 1) +'"></button>';
+          navHtml += '<button data-nav="' + i +'" tabindex="-1" aria-controls="' + slideId + '" ' + hiddenStr + ' aria-label="' + navStr + (i + 1) +'"></button>';
         }
-        navHtml = '<div class="tns-nav" aria-label="Carousel Pagination">' + navHtml + '</div>';
+        navHtml = '<div class="tns-nav" role="group" aria-label="carousel pagination">' + navHtml + '</div>';
         outerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
 
         navContainer = outerWrapper.querySelector('.tns-nav');
@@ -1513,6 +1513,7 @@ var tns = function(options) {
       setAttrs(navItems[navCurrentIndex], {'aria-label': navStr + (navCurrentIndex + 1) + navStrCurrent});
       removeAttrs(navItems[navCurrentIndex], 'tabindex');
       addClass(navItems[navCurrentIndex], navActiveClass);
+      navItems[navCurrentIndex].setAttribute('aria-disabled', 'true');
 
       // add events
       addEvents(navContainer, navEvents);
@@ -2421,10 +2422,12 @@ var tns = function(options) {
           'aria-label': navStr + (navCurrentIndexCached + 1)
         });
         removeClass(navPrev, navActiveClass);
+        navPrev.setAttribute('aria-disabled', 'false');
 
         setAttrs(navCurrent, {'aria-label': navStr + (navCurrentIndex + 1) + navStrCurrent});
         removeAttrs(navCurrent, 'tabindex');
         addClass(navCurrent, navActiveClass);
+        navCurrent.setAttribute('aria-disabled', 'true');
 
         navCurrentIndexCached = navCurrentIndex;
       }
