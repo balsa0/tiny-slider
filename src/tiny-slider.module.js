@@ -682,6 +682,7 @@ export var tns = function(options) {
         hasGutter = hasOption('gutter');
 
     outerWrapper.className = classOuter;
+    outerWrapper.setAttribute('aria-roledescription', 'carousel');
     innerWrapper.className = classInner;
     outerWrapper.id = slideId + '-ow';
     innerWrapper.id = slideId + '-iw';
@@ -1086,7 +1087,7 @@ export var tns = function(options) {
     // == controlsInit ==
     if (hasControls) {
       if (!controlsContainer && (!prevButton || !nextButton)) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<div class="tns-controls" aria-label="Carousel Navigation" tabindex="0"><button type="button" data-controls="prev" tabindex="-1" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button type="button" data-controls="next" tabindex="-1" aria-controls="' + slideId +'">' + controlsText[1] + '</button></div>');
+        outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<div class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></div>');
 
         controlsContainer = outerWrapper.querySelector('.tns-controls');
       }
