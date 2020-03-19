@@ -1009,7 +1009,7 @@ export var tns = function(options) {
       if (autoplayButton) {
         setAttrs(autoplayButton, {'data-action': txt});
       } else if (options.autoplayButtonOutput) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button type="button" data-action="' + txt + '">' + autoplayHtmlStrings[0] + txt + autoplayHtmlStrings[1] + autoplayText[0] + '</button>');
+        outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
         autoplayButton = outerWrapper.querySelector('[data-action]');
       }
 
@@ -2434,7 +2434,8 @@ export var tns = function(options) {
 
   function updateAutoplayButton (action, txt) {
     setAttrs(autoplayButton, {'data-action': action});
-    autoplayButton.innerHTML = autoplayHtmlStrings[0] + action + autoplayHtmlStrings[1] + txt;
+    autoplayButton.setAttribute('aria-label', action + " carousel");
+    autoplayButton.innerHTML = txt;
   }
 
   function startAutoplay () {
