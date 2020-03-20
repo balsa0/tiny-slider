@@ -2618,7 +2618,9 @@ var tns = function(options) {
       if (autoHeight) { doAutoHeight(); }
 
       // pause autoplay when click or keydown from user
-      if (animating && e && ['click', 'keydown'].indexOf(e.type) >= 0) { stopAutoplay(); }
+      if (animating && e && ['click', 'keydown'].indexOf(e.type) >= 0) {
+        stopAutoplay();
+      }
 
       running = true;
       container.setAttribute('aria-live', 'off');
@@ -2950,6 +2952,7 @@ var tns = function(options) {
 
   // keydown events on document
   function onDocumentKeydown (e) {
+    /*
     console.log("inside onDocumentKeydown");
     e = getEvent(e);
     var keyIndex = [KEYS.LEFT, KEYS.RIGHT].indexOf(e.keyCode);
@@ -2957,6 +2960,7 @@ var tns = function(options) {
     if (keyIndex >= 0) {
       onControlsClick(e, keyIndex === 0 ? -1 : 1);
     }
+    */
   }
 
   // on key control
@@ -2992,12 +2996,22 @@ var tns = function(options) {
 
     if (keyIndex >= 0) {
       if (keyIndex === 0) {
-        if (navIndex > 0) { setFocus(navItems[navIndex - 1]); }
-      } else if (keyIndex === 1) {
-        if (navIndex < pages - 1) { setFocus(navItems[navIndex + 1]); }
-      } else {
+        console.log("nav left");
+        if (navIndex > 0) {
+          setFocus(navItems[navIndex - 1]);
+        }
+      }
+      else if (keyIndex === 1) {
+        console.log("nav right");
+        if (navIndex < pages - 1) {
+          setFocus(navItems[navIndex + 1]);
+        }
+      }
+      else {
+        console.log("nav enter or space");
         navClicked = navIndex;
-        goTo(navIndex, e);
+        // goTo(navIndex, e);
+        // because enter or space is pressed, click event -> onNavClick will also be triggered
       }
     }
   }
