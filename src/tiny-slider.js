@@ -245,7 +245,7 @@ export var tns = function(options) {
   }
 
   var horizontal = options.axis === 'horizontal' ? true : false,
-      outerWrapper = doc.createElement('div'),
+      outerWrapper = doc.createElement('section'),
       innerWrapper = doc.createElement('div'),
       middleWrapper,
       container = options.container,
@@ -724,6 +724,7 @@ export var tns = function(options) {
         addClass(item, animateNormal);
       }
       setAttrs(item, {
+        'role': 'group',
         'aria-hidden': 'true',
         'aria-roledescription': 'slide',
         'aria-label': '' + (i + 1) + ' of ' + slideItems.length
