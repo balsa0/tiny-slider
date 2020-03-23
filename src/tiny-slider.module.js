@@ -1007,31 +1007,6 @@ export var tns = function(options) {
 
     // == live region ==
     container.setAttribute('aria-atomic', 'false');
-    // == autoplayInit ==
-    if (hasAutoplay) {
-      container.setAttribute('aria-live', 'off');
-      var txt = autoplay ? 'stop' : 'start';
-      if (autoplayButton) {
-        setAttrs(autoplayButton, {'data-action': txt});
-      } else if (options.autoplayButtonOutput) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
-        autoplayButton = outerWrapper.querySelector('[data-action]');
-      }
-
-      // add event
-      if (autoplayButton) {
-        addEvents(autoplayButton, {'click': toggleAutoplay});
-      }
-
-      if (autoplay) {
-        startAutoplay();
-        if (autoplayHoverPause) { addEvents(container, hoverEvents); }
-        if (autoplayResetOnVisibility) { addEvents(container, visibilityEvent); }
-      }
-    }
-    else {
-      container.setAttribute('aria-live', 'polite');
-    }
 
     // == navInit ==
     if (hasNav) {
@@ -1093,7 +1068,7 @@ export var tns = function(options) {
     // == controlsInit ==
     if (hasControls) {
       if (!controlsContainer && (!prevButton || !nextButton)) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<div class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></div>');
+        outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
 
         controlsContainer = outerWrapper.querySelector('.tns-controls');
       }
@@ -1134,6 +1109,33 @@ export var tns = function(options) {
         addEvents(prevButton, controlsEvents);
         addEvents(nextButton, controlsEvents);
       }
+    }
+
+    // == autoplayInit ==
+    if (hasAutoplay) {
+      container.setAttribute('aria-live', 'off');
+      var txt = autoplay ? 'stop' : 'start';
+      if (autoplayButton) {
+        setAttrs(autoplayButton, {'data-action': txt});
+      } else if (options.autoplayButtonOutput) {
+        console.log("autoplayButtonOutput is true");
+        outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
+        autoplayButton = outerWrapper.querySelector('[data-action]');
+      }
+
+      // add event
+      if (autoplayButton) {
+        addEvents(autoplayButton, {'click': toggleAutoplay});
+      }
+
+      if (autoplay) {
+        startAutoplay();
+        if (autoplayHoverPause) { addEvents(container, hoverEvents); }
+        if (autoplayResetOnVisibility) { addEvents(container, visibilityEvent); }
+      }
+    }
+    else {
+      container.setAttribute('aria-live', 'polite');
     }
 
     // hide tools if needed
@@ -1194,8 +1196,12 @@ export var tns = function(options) {
     // autoplay
     removeEvents(container, hoverEvents);
     removeEvents(container, visibilityEvent);
-    if (autoplayButton) { removeEvents(autoplayButton, {'click': toggleAutoplay}); }
-    if (autoplay) { clearInterval(autoplayTimer); }
+    if (autoplayButton) {
+      removeEvents(autoplayButton, {'click': toggleAutoplay});
+    }
+    if (autoplay) {
+      clearInterval(autoplayTimer);
+    }
 
     // container
     if (carousel && TRANSITIONEND) {
@@ -1203,8 +1209,12 @@ export var tns = function(options) {
       eve[TRANSITIONEND] = onTransitionEnd;
       removeEvents(container, eve);
     }
-    if (touch) { removeEvents(container, touchEvents); }
-    if (mouseDrag) { removeEvents(container, dragEvents); }
+    if (touch) {
+      removeEvents(container, touchEvents);
+    }
+    if (mouseDrag) {
+      removeEvents(container, dragEvents);
+    }
 
     // cache Object values in options && reset HTML
     var htmlList = [containerHTML, controlsContainerHTML, prevButtonHTML, nextButtonHTML, navContainerHTML, autoplayButtonHTML];
@@ -2451,13 +2461,17 @@ export var tns = function(options) {
   function startAutoplay () {
     setAutoplayTimer();
     container.setAttribute('aria-live', 'off');
-    if (autoplayButton) { updateAutoplayButton('stop', autoplayText[1]); }
+    if (autoplayButton) {
+      updateAutoplayButton('stop', autoplayText[1]);
+    }
   }
 
   function stopAutoplay () {
     stopAutoplayTimer();
     container.setAttribute('aria-live', 'polite');
-    if (autoplayButton) { updateAutoplayButton('start', autoplayText[0]); }
+    if (autoplayButton) {
+      updateAutoplayButton('start', autoplayText[0]);
+    }
   }
 
   // programaitcally play/pause the slider
