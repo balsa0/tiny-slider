@@ -678,6 +678,7 @@ var tns = function(options) {
 
   var horizontal = options.axis === 'horizontal' ? true : false,
       outerWrapper = doc.createElement('section'),
+      controllerWrapper = doc.createElement('div'),
       innerWrapper = doc.createElement('div'),
       middleWrapper,
       container = options.container,
@@ -1111,6 +1112,7 @@ var tns = function(options) {
   function initStructure () {
     var classOuter = 'tns-outer',
         classInner = 'tns-inner',
+        classController = 'tns-controller',
         hasGutter = hasOption('gutter');
 
     outerWrapper.className = classOuter;
@@ -1118,6 +1120,8 @@ var tns = function(options) {
     innerWrapper.className = classInner;
     outerWrapper.id = slideId + '-ow';
     innerWrapper.id = slideId + '-iw';
+
+    controllerWrapper.className = classController;
 
     // set container properties
     if (container.id === '') { container.id = slideId; }
@@ -1127,6 +1131,8 @@ var tns = function(options) {
     newContainerClasses += ' tns-' + options.axis;
     container.className += newContainerClasses;
 
+    outerWrapper.appendChild(controllerWrapper);
+    
     // add constrain layer for carousel
     if (carousel) {
       middleWrapper = doc.createElement('div');
@@ -1138,7 +1144,7 @@ var tns = function(options) {
     } else {
       outerWrapper.appendChild(innerWrapper);
     }
-
+    
     if (autoHeight) {
       var wp = middleWrapper ? middleWrapper : innerWrapper;
       wp.className += ' tns-ah';
@@ -1458,7 +1464,8 @@ var tns = function(options) {
         });
 
       // generated nav
-      } else {
+      }
+      else {
         var navHtml = '',
             hiddenStr = navAsThumbnails ? '' : 'style="display:none"';
         for (var i = 0; i < slideCount; i++) {
@@ -1466,7 +1473,8 @@ var tns = function(options) {
           navHtml += '<button data-nav="' + i +'" tabindex="-1" aria-controls="' + slideId + '" ' + hiddenStr + ' aria-label="' + navStr + (i + 1) +'"></button>';
         }
         navHtml = '<div class="tns-nav" role="group" aria-label="carousel pagination">' + navHtml + '</div>';
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
+        // outerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
 
         navContainer = outerWrapper.querySelector('.tns-nav');
         navItems = navContainer.children;
@@ -1500,7 +1508,8 @@ var tns = function(options) {
     // == controlsInit ==
     if (hasControls) {
       if (!controlsContainer && (!prevButton || !nextButton)) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
+        // outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
 
         controlsContainer = outerWrapper.querySelector('.tns-controls');
       }
@@ -1551,7 +1560,8 @@ var tns = function(options) {
         setAttrs(autoplayButton, {'data-action': txt});
       } else if (options.autoplayButtonOutput) {
         console.log("autoplayButtonOutput is true");
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
+        // outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
         autoplayButton = outerWrapper.querySelector('[data-action]');
       }
 
