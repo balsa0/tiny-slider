@@ -1040,7 +1040,7 @@ export var tns = function(options) {
           // hide nav items by default
           navHtml += '<button data-nav="' + i +'" tabindex="-1" aria-controls="' + slideId + '" ' + hiddenStr + ' aria-label="' + navStr + (i + 1) +'"></button>';
         }
-        navHtml = '<div class="tns-nav" role="group" aria-label="carousel pagination">' + navHtml + '</div>';
+        navHtml = '<span class="tns-nav" role="group" aria-label="carousel pagination">' + navHtml + '</span>';
         // outerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
         controllerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
 
