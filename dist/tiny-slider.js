@@ -3152,6 +3152,7 @@ var tns = function(options) {
 
   function onPanEnd (e) {
     console.log("inside onPanEnd");
+    container.classList.remove('tns-animating');
     if (panStart) {
       if (rafIndex) {
         caf(rafIndex);
