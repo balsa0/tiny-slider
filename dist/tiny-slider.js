@@ -1508,9 +1508,7 @@ var tns = function(options) {
     // == controlsInit ==
     if (hasControls) {
       if (!controlsContainer && (!prevButton || !nextButton)) {
-        // outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
-        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
-
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button class="tns-prev" data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button class="tns-next" data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
         controlsContainer = outerWrapper.querySelector('.tns-controls');
       }
 
