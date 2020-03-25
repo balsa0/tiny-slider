@@ -1589,7 +1589,13 @@ var tns = function(options) {
       eve[TRANSITIONEND] = onTransitionEnd;
       addEvents(container, eve);
     }
-
+    
+    addEvents(outerWrapper, {
+      'focusin': onContainedFocusChange,
+      'focusout': onContainedFocusChange
+      }
+    );
+    
     if (touch) { addEvents(container, touchEvents, options.preventScrollOnTouch); }
     if (mouseDrag) { addEvents(container, dragEvents); }
     // if (arrowKeys) { addEvents(doc, docmentKeydownEvent); }
@@ -2658,6 +2664,57 @@ var tns = function(options) {
     return str.toLowerCase().replace(/-/g, '');
   }
 
+  function onContainerFocusIn (event) {
+    console.log("received focusin");
+  }
+  
+  function onContainerFocusOut (event) {
+    console.log("received focusout");
+  }
+  
+  function onContainedFocusChange(event) {
+    console.log('----------------');
+    thisContainer = this;
+    // relatedTarget = event.relatedTarget;
+    // console.log('relatedTarget', relatedTarget);
+    // console.log('onContainedFocusChange!!');
+    // console.log('this', this);
+    // console.log('event', event);
+    eventType = event.type;
+    // console.log('eventType', eventType);
+    eventTarget = event.target;
+    // console.log('eventTarget', eventTarget);
+    
+    
+    if ('focusin' === eventType) {
+      previouslyFocusedElement = event.relatedTarget;
+      wasFocusPreviouslyAlreadyInsideContainer = thisContainer.contains(previouslyFocusedElement);
+      if (wasFocusPreviouslyAlreadyInsideContainer) {
+        console.log('~~~~~~ STILL PAUSE (via focusin) ~~~~ ');
+      }
+      else {
+        console.log('~~~~~~ PAUSE ~~~~ ');
+        mouseoverPause();
+      }
+    }
+    else if ('focusout' === eventType) {
+      newlyFocusedElement = event.relatedTarget;
+      // console.log('~~~~~~ newlyFocusedElement ~~~~~', newlyFocusedElement);
+      // activeElement = document.activeElement;
+      // console.log('~~~~~~ activeElement ~~~~~', activeElement);
+      
+      isFocusStillInsideContainer = thisContainer.contains(newlyFocusedElement);
+      if (isFocusStillInsideContainer) {
+        console.log('~~~~~~ STILL PAUSE (via focusout) ~~~~ ');
+      }
+      else {
+        console.log('~~~~~~ RESUME ~~~~ ');
+        mouseoutRestart();
+      }
+      console.log('----------------');
+    }
+  }
+  
   // AFTER TRANSFORM
   // Things need to be done after a transfer:
   // 1. check index
