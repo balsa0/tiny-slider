@@ -1556,11 +1556,14 @@ var tns = function(options) {
       var txt = autoplay ? 'stop' : 'start';
       if (autoplayButton) {
         setAttrs(autoplayButton, {'data-action': txt});
-      } else if (options.autoplayButtonOutput) {
+      }
+      else if (options.autoplayButtonOutput) {
         console.log("autoplayButtonOutput is true");
-        // outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
+        var currentState =  autoplay ? 'playing' : 'stopped';
         controllerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<span class="tns-autoplay-indicator" data-state="' + currentState + '"></span>');
         autoplayButton = outerWrapper.querySelector('[data-action]');
+        autoplayIndicator = outerWrapper.querySelector('[data-state]');
       }
 
       // add event
@@ -1570,8 +1573,12 @@ var tns = function(options) {
 
       if (autoplay) {
         startAutoplay();
-        if (autoplayHoverPause) { addEvents(container, hoverEvents); }
-        if (autoplayResetOnVisibility) { addEvents(container, visibilityEvent); }
+        if (autoplayHoverPause) {
+          addEvents(outerWrapper, hoverEvents);
+        }
+        if (autoplayResetOnVisibility) {
+          addEvents(container, visibilityEvent);
+        }
       }
     }
     else {
@@ -1640,7 +1647,7 @@ var tns = function(options) {
     if (navContainer) { removeEvents(navContainer, navEvents); }
 
     // autoplay
-    removeEvents(container, hoverEvents);
+    removeEvents(outerWrapper, hoverEvents);
     removeEvents(container, visibilityEvent);
     if (autoplayButton) {
       removeEvents(autoplayButton, {'click': toggleAutoplay});
@@ -1872,9 +1879,7 @@ var tns = function(options) {
       }
     }
     if (autoplayHoverPause !== autoplayHoverPauseTem) {
-      autoplayHoverPause ?
-        addEvents(container, hoverEvents) :
-        removeEvents(container, hoverEvents);
+      autoplayHoverPause ? addEvents(outerWrapper, hoverEvents) : removeEvents(outerWrapper, hoverEvents);
     }
     if (autoplayResetOnVisibility !== autoplayResetOnVisibilityTem) {
       autoplayResetOnVisibility ?
@@ -2167,8 +2172,10 @@ var tns = function(options) {
   }
 
   function getVisibleSlideRange (val) {
-    console.log("inside getVisibleSlideRange");
-    if (val == null) { val = getContainerTransformValue(); }
+    // console.log("inside getVisibleSlideRange");
+    if (val == null) {
+      val = getContainerTransformValue();
+    }
     var start = index, end, rangestart, rangeend;
 
     // get range start, range end for autoWidth and fixedWidth
@@ -2376,7 +2383,7 @@ var tns = function(options) {
 
   // update slide
   function updateSlideStatus () {
-    console.log("inside updateSlideStatus");
+    // console.log("inside updateSlideStatus");
     var range = getVisibleSlideRange(),
         start = range[0],
         end = range[1];
@@ -2631,7 +2638,7 @@ var tns = function(options) {
   })();
 
   function render (e, sliderMoved) {
-    console.log("inside render");
+    // console.log("inside render");
     if (updateIndexBeforeTransform) { updateIndex(); }
 
     // render when slider was moved (touch or drag) even though index may not change
@@ -2714,7 +2721,10 @@ var tns = function(options) {
       console.log('----------------');
     }
   }
-  
+  function containerHasAttention() {
+    var containsFocus = outerWrapper.contains(document.activeElement);
+    // 
+  }
   // AFTER TRANSFORM
   // Things need to be done after a transfer:
   // 1. check index
@@ -2724,9 +2734,9 @@ var tns = function(options) {
   // 5. lazyload images
   // 6. update container height
   function onTransitionEnd (event) {
-    console.log("inside onTransitionEnd");
-    console.log("autoplayUserPaused", autoplayUserPaused);
-    console.log("animating", animating);
+    // console.log("inside onTransitionEnd");
+    // console.log("autoplayUserPaused", autoplayUserPaused);
+    // console.log("animating", animating);
     // check running on gallery mode
     // make sure trantionend/animationend events run only once
     if (carousel || running) {
@@ -2787,7 +2797,7 @@ var tns = function(options) {
 
   // # ACTIONS
   function goTo (targetIndex, e) {
-    console.log("inside goTo");
+    // console.log("inside goTo");
     if (freeze) { return; }
 
     // prev slideBy
@@ -2950,9 +2960,29 @@ var tns = function(options) {
   }
 
   function updateAutoplayButton (action, txt) {
-    setAttrs(autoplayButton, {'data-action': action});
-    autoplayButton.setAttribute('aria-label', action + " carousel");
-    autoplayButton.innerHTML = txt;
+    console.log("inside updateAutoplayButton");
+    console.log("animating", animating);
+    console.log("autoplayHoverPaused", autoplayHoverPaused);
+    
+    if (autoplayUserPaused || autoplayHoverPaused) {
+      setAttrs(autoplayIndicator, {'data-state': 'paused'});
+    }
+    else {
+      setAttrs(autoplayIndicator, {'data-state': 'playing'});
+    }
+    
+    if (autoplayUserPaused) {
+      setAttrs(autoplayButton, {'data-action': 'start'});
+      autoplayButton.setAttribute('aria-label', "start carousel");
+      autoplayButton.innerHTML = txt;
+    }
+    else {
+      setAttrs(autoplayButton, {'data-action': 'stop'});
+      autoplayButton.setAttribute('aria-label', "stop carousel");
+      autoplayButton.innerHTML = txt;
+    }
+    
+    
   }
 
   function startAutoplay () {
@@ -2986,12 +3016,22 @@ var tns = function(options) {
   }
 
   function toggleAutoplay () {
+    /*
     if (animating) {
       stopAutoplay();
       autoplayUserPaused = true;
     } else {
       startAutoplay();
       autoplayUserPaused = false;
+    }
+    */
+    if (autoplayUserPaused) {
+      autoplayUserPaused = false;
+      startAutoplay();
+    }
+    else {
+      autoplayUserPaused = true;
+      stopAutoplay();
     }
   }
 
