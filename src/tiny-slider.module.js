@@ -1136,7 +1136,10 @@ export var tns = function(options) {
 
       // add event
       if (autoplayButton) {
-        addEvents(autoplayButton, {'click': toggleAutoplay});
+        addEvents(autoplayButton, {
+          'click': toggleAutoplay,
+          'keydown': onControlsKeydown
+          });
       }
 
       if (autoplay) {
@@ -1170,6 +1173,10 @@ export var tns = function(options) {
       'focusout': onContainedFocusChange
       }
     );
+    
+    addEvents(innerWrapper, {
+      'keydown': onControlsKeydown
+    });
     
     if (touch) { addEvents(container, touchEvents, options.preventScrollOnTouch); }
     if (mouseDrag) { addEvents(container, dragEvents); }
