@@ -1005,9 +1005,6 @@ export var tns = function(options) {
   }
 
   function initTools () {
-    console.log("container", container);
-    console.log("outerWrapper", outerWrapper);
-    console.log("containerParent", containerParent);
     // == slides ==
     updateSlideStatus();
 
@@ -1175,7 +1172,7 @@ export var tns = function(options) {
     );
     
     addEvents(innerWrapper, {
-      'keydown': onControlsKeydown
+      'keydown': onInnerWrapperKeydown
     });
     
     if (touch) { addEvents(container, touchEvents, options.preventScrollOnTouch); }
@@ -1958,26 +1955,23 @@ export var tns = function(options) {
 
   // update slide
   function updateSlideStatus () {
-    // console.log("inside updateSlideStatus");
+    console.log("inside updateSlideStatus");
     var range = getVisibleSlideRange(),
         start = range[0],
         end = range[1];
 
     forEach(slideItems, function(item, i) {
-      // show slides
       if (i >= start && i <= end) {
-        if (hasAttr(item, 'aria-hidden')) {
-          removeAttrs(item, ['aria-hidden']);
-          addClass(item, slideActiveClass);
-        }
+        // show slides
+        removeAttrs(item, ['aria-hidden']);
+        addClass(item, slideActiveClass);
+        setAttrs(item, { 'tabindex': '0' });
+      }
+      else {
       // hide slides
-      } else {
-        if (!hasAttr(item, 'aria-hidden')) {
-          setAttrs(item, {
-            'aria-hidden': 'true'
-          });
-          removeClass(item, slideActiveClass);
-        }
+        setAttrs(item, { 'aria-hidden': 'true' });
+        removeClass(item, slideActiveClass);
+        setAttrs(item, { 'tabindex': '-1' });
       }
     });
   }
@@ -2255,7 +2249,7 @@ export var tns = function(options) {
   }
   
   function onContainedFocusChange(event) {
-    console.log('----------------');
+    // console.log('----------------');
     thisContainer = this;
     // relatedTarget = event.relatedTarget;
     // console.log('relatedTarget', relatedTarget);
@@ -2272,10 +2266,10 @@ export var tns = function(options) {
       previouslyFocusedElement = event.relatedTarget;
       wasFocusPreviouslyAlreadyInsideContainer = thisContainer.contains(previouslyFocusedElement);
       if (wasFocusPreviouslyAlreadyInsideContainer) {
-        console.log('~~~~~~ STILL PAUSE (via focusin) ~~~~ ');
+        // console.log('~~~~~~ STILL PAUSE (via focusin) ~~~~ ');
       }
       else {
-        console.log('~~~~~~ PAUSE ~~~~ ');
+        // console.log('~~~~~~ PAUSE ~~~~ ');
         mouseoverPause();
       }
     }
@@ -2287,13 +2281,13 @@ export var tns = function(options) {
       
       isFocusStillInsideContainer = thisContainer.contains(newlyFocusedElement);
       if (isFocusStillInsideContainer) {
-        console.log('~~~~~~ STILL PAUSE (via focusout) ~~~~ ');
+        // console.log('~~~~~~ STILL PAUSE (via focusout) ~~~~ ');
       }
       else {
-        console.log('~~~~~~ RESUME ~~~~ ');
+        // console.log('~~~~~~ RESUME ~~~~ ');
         mouseoutRestart();
       }
-      console.log('----------------');
+      // console.log('----------------');
     }
   }
   function containerHasAttention() {
@@ -2437,7 +2431,7 @@ export var tns = function(options) {
   
   // on controls click - badly named because it is triggered not only by user click, but also by automatisms
   function onControlsClick (e, dir) {
-    console.log("inside onControlsClick");
+    // console.log("inside onControlsClick");
     // pause();
     if (running) {
       if (preventActionWhenRunning) {
@@ -2448,7 +2442,7 @@ export var tns = function(options) {
       }
     }
     var passEventObject;
-    console.log("dir", dir);
+    // console.log("dir", dir);
     if (!dir) {
       console.log("inside not-dir. probably either prev or next button clicked");
       e = getEvent(e);
@@ -2457,11 +2451,11 @@ export var tns = function(options) {
       while (target !== controlsContainer && [prevButton, nextButton].indexOf(target) < 0) { target = target.parentNode; }
 
       var targetIn = [prevButton, nextButton].indexOf(target);
-      console.log("targetIn", targetIn);
+      // console.log("targetIn", targetIn);
       if (targetIn >= 0) {
         passEventObject = true;
         dir = targetIn === 0 ? -1 : 1;
-        console.log("now dir", dir);
+        // console.log("now dir", dir);
       }
     }
 
@@ -2485,7 +2479,7 @@ export var tns = function(options) {
 
   // on nav click
   function onNavClick (e) {
-    console.log("inside onNavClick");
+    // console.log("inside onNavClick");
     pause();
     if (running) {
       if (preventActionWhenRunning) {
@@ -2516,7 +2510,7 @@ export var tns = function(options) {
 
   // autoplay functions
   function setAutoplayTimer () {
-    console.log("inside setAutoplayTimer");
+    // console.log("inside setAutoplayTimer");
     if (!autoplayTimer) {
       autoplayTimer = setInterval(function () {
         onControlsClick(null, autoplayDirection);
@@ -2527,7 +2521,7 @@ export var tns = function(options) {
   }
 
   function stopAutoplayTimer () {
-    console.log("inside stopAutoplayTimer");
+    // console.log("inside stopAutoplayTimer");
     if (autoplayTimer) {
       autoplayTimer = clearInterval(autoplayTimer);
     }
@@ -2535,9 +2529,9 @@ export var tns = function(options) {
   }
 
   function updateAutoplayButton (action, txt) {
-    console.log("inside updateAutoplayButton");
-    console.log("animating", animating);
-    console.log("autoplayHoverPaused", autoplayHoverPaused);
+    // console.log("inside updateAutoplayButton");
+    // console.log("animating", animating);
+    // console.log("autoplayHoverPaused", autoplayHoverPaused);
     
     if (autoplayUserPaused || autoplayHoverPaused) {
       setAttrs(autoplayIndicator, {'data-state': 'paused'});
@@ -2623,20 +2617,20 @@ export var tns = function(options) {
   }
 
   function mouseoverPause () {
-    console.log("inside mouseoverPause");
+    // console.log("inside mouseoverPause");
     if (animating) {
-      console.log("@@@@@@@@@@@ is animating!");
+      // console.log("@@@@@@@@@@@ is animating!");
       stopAutoplayTimer();
       autoplayHoverPaused = true;
     }
     else {
-      console.log("%%%%%%%%%%%%%%%%%%%% is not animating!");
+      // console.log("%%%%%%%%%%%%%%%%%%%% is not animating!");
     }
     updateAutoplayButton('start', autoplayText[0]);
   }
 
   function mouseoutRestart () {
-    console.log("inside mouseoutRestart");
+    // console.log("inside mouseoutRestart");
     if (autoplayHoverPaused && !autoplayUserPaused) {
       setAutoplayTimer();
       autoplayHoverPaused = false;
@@ -2665,13 +2659,37 @@ export var tns = function(options) {
 
     if (keyIndex >= 0) {
       if (keyIndex === 0) {
-        if (!prevButton.disabled) { onControlsClick(e, -1); }
-      } else if (!nextButton.disabled) {
+        // left cursor key pressed
+        if (!prevButton.disabled) {
+          onControlsClick(e, -1);
+        }
+      }
+      else if (!nextButton.disabled) {
+        // right cursor key pressed and nextButton is not disabled
         onControlsClick(e, 1);
       }
+      event.stopPropagation();
+      event.preventDefault();
     }
   }
-
+  
+  function setFocusOnFirstVisibleSlideAndRemoveThisEventListener () {
+    console.log("crzy!!!!!");
+    var firstVisibleSlideItemIndex = getVisibleSlideRange()[0];
+    var firstVisibleSlideItem = slideItems[firstVisibleSlideItemIndex];
+    firstVisibleSlideItem.focus();
+    events.off('transitionEnd', setFocusOnFirstVisibleSlideAndRemoveThisEventListener);
+  }
+  
+  function onInnerWrapperKeydown (event) {
+    console.log("inside onInnerWrapperKeydown");
+    if ([KEYS.LEFT, KEYS.RIGHT].includes(event.keyCode)) {
+      console.log("left or right was pressed. registering callback to set focus on first visible slide once transition animation has finished");
+      events.on('transitionEnd', setFocusOnFirstVisibleSlideAndRemoveThisEventListener);
+    }
+    onControlsKeydown(event);
+  }
+  
   // set focus
   function setFocus (el) {
     el.focus();
@@ -2690,13 +2708,13 @@ export var tns = function(options) {
 
     if (keyIndex >= 0) {
       if (keyIndex === 0) {
-        console.log("nav left");
+        // console.log("nav left");
         if (navIndex > 0) {
           setFocus(navItems[navIndex - 1]);
         }
       }
       else if (keyIndex === 1) {
-        console.log("nav right");
+        // console.log("nav right");
         if (navIndex < pages - 1) {
           setFocus(navItems[navIndex + 1]);
         }
@@ -2733,13 +2751,13 @@ export var tns = function(options) {
   function onPanStart (e) {
     container.setAttribute('aria-live', 'off');
     container.classList.add('tns-animating');
-    console.log("inside onPanStart");
-    console.log("autoplay", autoplay);
-    console.log("animating", animating);
-    console.log("running", running);
-    console.log("preventActionWhenRunning", preventActionWhenRunning);
-    console.log("rafIndex", rafIndex);
-    console.log("carousel", carousel);
+    // console.log("inside onPanStart");
+ // console.log("autoplay", autoplay);
+ // console.log("animating", animating);
+ // console.log("running", running);
+ // console.log("preventActionWhenRunning", preventActionWhenRunning);
+ // console.log("rafIndex", rafIndex);
+ // console.log("carousel", carousel);
     
     
     if (running) {
@@ -2821,7 +2839,7 @@ export var tns = function(options) {
   }
 
   function onPanEnd (e) {
-    console.log("inside onPanEnd");
+    // console.log("inside onPanEnd");
     container.classList.remove('tns-animating');
     if (panStart) {
       if (rafIndex) {
