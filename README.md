@@ -523,3 +523,10 @@ Images on demo page are from https://unsplash.com/.
 
 ## License
 This project is available under the [MIT](https://opensource.org/licenses/mit-license.php) license.
+
+## GESIS build setup
+* No need for Docker container.
+* Have `node` and `npm` installed.
+* Make sure that `bower`, `gulp` packages are installed globally: `npm install -g bower gulp nodemon`.
+* Initially set up dependencies by running `npm install`.
+* From now on, an automatic building watch can be kept active by running `nodemon --watch gulpfile.js --exec gulp`.
