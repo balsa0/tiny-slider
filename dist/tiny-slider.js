@@ -623,7 +623,7 @@ var tns = function(options) {
   });
 
   // make sure at least 1 slide
-  if (options.container.children.length < 1) {
+  if (!options.container || !options.container.children || options.container.children.length < 1) {
     if (supportConsoleWarn) { console.warn('No slides found in', options.container); }
     return;
    }
@@ -685,7 +685,8 @@ var tns = function(options) {
   }
 
   var horizontal = options.axis === 'horizontal' ? true : false,
-      outerWrapper = doc.createElement('div'),
+      outerWrapper = doc.createElement('section'),
+      controllerWrapper = doc.createElement('div'),
       innerWrapper = doc.createElement('div'),
       middleWrapper,
       container = options.container,
@@ -780,7 +781,7 @@ var tns = function(options) {
       freeze = freezable && !autoWidth ? getFreeze() : false,
       frozen = false,
       controlsEvents = {
-        'click': onControlsClick,
+        'click': onPrevNextClick,
         'keydown': onControlsKeydown
       },
       navEvents = {
@@ -802,6 +803,7 @@ var tns = function(options) {
         'mousedown': onPanStart,
         'mousemove': onPanMove,
         'mouseup': onPanEnd,
+        // 'mouseup': onPanEnd
         'mouseleave': onPanEnd
       },
       hasControls = hasOption('controls'),
@@ -818,7 +820,6 @@ var tns = function(options) {
         'error': onImgFailed
       },
       imgsComplete,
-      liveregionCurrent,
       preventScroll = options.preventScrollOnTouch === 'force' ? true : false;
 
   // controls
@@ -844,8 +845,8 @@ var tns = function(options) {
         navCurrentIndex = getCurrentNavIndex(),
         navCurrentIndexCached = navCurrentIndex,
         navActiveClass = 'tns-nav-active',
-        navStr = 'Carousel Page ',
-        navStrCurrent = ' (Current Slide)';
+        navStr = 'carousel page ',
+        navStrCurrent = ' (current slide)';
   }
 
   // autoplay
@@ -1120,12 +1121,16 @@ var tns = function(options) {
   function initStructure () {
     var classOuter = 'tns-outer',
         classInner = 'tns-inner',
+        classController = 'tns-controller',
         hasGutter = hasOption('gutter');
 
     outerWrapper.className = classOuter;
+    outerWrapper.setAttribute('aria-roledescription', 'carousel');
     innerWrapper.className = classInner;
     outerWrapper.id = slideId + '-ow';
     innerWrapper.id = slideId + '-iw';
+
+    controllerWrapper.className = classController;
 
     // set container properties
     if (container.id === '') { container.id = slideId; }
@@ -1135,6 +1140,8 @@ var tns = function(options) {
     newContainerClasses += ' tns-' + options.axis;
     container.className += newContainerClasses;
 
+    outerWrapper.appendChild(controllerWrapper);
+    
     // add constrain layer for carousel
     if (carousel) {
       middleWrapper = doc.createElement('div');
@@ -1146,7 +1153,7 @@ var tns = function(options) {
     } else {
       outerWrapper.appendChild(innerWrapper);
     }
-
+    
     if (autoHeight) {
       var wp = middleWrapper ? middleWrapper : innerWrapper;
       wp.className += ' tns-ah';
@@ -1160,10 +1167,14 @@ var tns = function(options) {
     forEach(slideItems, function(item, i) {
       addClass(item, 'tns-item');
       if (!item.id) { item.id = slideId + '-item' + i; }
-      if (!carousel && animateNormal) { addClass(item, animateNormal); }
+      if (!carousel && animateNormal) {
+        addClass(item, animateNormal);
+      }
       setAttrs(item, {
+        'role': 'group',
         'aria-hidden': 'true',
-        'tabindex': '-1'
+        'aria-roledescription': 'slide',
+        'aria-label': '' + (i + 1) + ' of ' + slideItems.length
       });
     });
 
@@ -1441,30 +1452,7 @@ var tns = function(options) {
     updateSlideStatus();
 
     // == live region ==
-    outerWrapper.insertAdjacentHTML('afterbegin', '<div class="tns-liveregion tns-visually-hidden" aria-live="polite" aria-atomic="true">slide <span class="current">' + getLiveRegionStr() + '</span>  of ' + slideCount + '</div>');
-    liveregionCurrent = outerWrapper.querySelector('.tns-liveregion .current');
-
-    // == autoplayInit ==
-    if (hasAutoplay) {
-      var txt = autoplay ? 'stop' : 'start';
-      if (autoplayButton) {
-        setAttrs(autoplayButton, {'data-action': txt});
-      } else if (options.autoplayButtonOutput) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button type="button" data-action="' + txt + '">' + autoplayHtmlStrings[0] + txt + autoplayHtmlStrings[1] + autoplayText[0] + '</button>');
-        autoplayButton = outerWrapper.querySelector('[data-action]');
-      }
-
-      // add event
-      if (autoplayButton) {
-        addEvents(autoplayButton, {'click': toggleAutoplay});
-      }
-
-      if (autoplay) {
-        startAutoplay();
-        if (autoplayHoverPause) { addEvents(container, hoverEvents); }
-        if (autoplayResetOnVisibility) { addEvents(container, visibilityEvent); }
-      }
-    }
+    container.setAttribute('aria-atomic', 'false');
 
     // == navInit ==
     if (hasNav) {
@@ -1484,15 +1472,17 @@ var tns = function(options) {
         });
 
       // generated nav
-      } else {
+      }
+      else {
         var navHtml = '',
             hiddenStr = navAsThumbnails ? '' : 'style="display:none"';
         for (var i = 0; i < slideCount; i++) {
           // hide nav items by default
-          navHtml += '<button type="button" data-nav="' + i +'" tabindex="-1" aria-controls="' + slideId + '" ' + hiddenStr + ' aria-label="' + navStr + (i + 1) +'"></button>';
+          navHtml += '<button data-nav="' + i +'" tabindex="-1" aria-controls="' + slideId + '" ' + hiddenStr + ' aria-label="' + navStr + (i + 1) +'"></button>';
         }
-        navHtml = '<div class="tns-nav" aria-label="Carousel Pagination">' + navHtml + '</div>';
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
+        navHtml = '<span class="tns-nav" role="group" aria-label="carousel pagination">' + navHtml + '</span>';
+        // outerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.navPosition), navHtml);
 
         navContainer = outerWrapper.querySelector('.tns-nav');
         navItems = navContainer.children;
@@ -1515,6 +1505,7 @@ var tns = function(options) {
       setAttrs(navItems[navCurrentIndex], {'aria-label': navStr + (navCurrentIndex + 1) + navStrCurrent});
       removeAttrs(navItems[navCurrentIndex], 'tabindex');
       addClass(navItems[navCurrentIndex], navActiveClass);
+      navItems[navCurrentIndex].setAttribute('aria-disabled', 'true');
 
       // add events
       addEvents(navContainer, navEvents);
@@ -1525,8 +1516,7 @@ var tns = function(options) {
     // == controlsInit ==
     if (hasControls) {
       if (!controlsContainer && (!prevButton || !nextButton)) {
-        outerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<div class="tns-controls" aria-label="Carousel Navigation" tabindex="0"><button type="button" data-controls="prev" tabindex="-1" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button type="button" data-controls="next" tabindex="-1" aria-controls="' + slideId +'">' + controlsText[1] + '</button></div>');
-
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.controlsPosition), '<span class="tns-controls" aria-label="carousel navigation"><button class="tns-prev" data-controls="prev" aria-label="previous slide" aria-controls="' + slideId +'">' + controlsText[0] + '</button><button class="tns-next" data-controls="next" aria-label="next slide" aria-controls="' + slideId +'">' + controlsText[1] + '</button></span>');
         controlsContainer = outerWrapper.querySelector('.tns-controls');
       }
 
@@ -1568,6 +1558,44 @@ var tns = function(options) {
       }
     }
 
+    // == autoplayInit ==
+    if (hasAutoplay) {
+      container.setAttribute('aria-live', 'off');
+      var txt = autoplay ? 'stop' : 'start';
+      if (autoplayButton) {
+        setAttrs(autoplayButton, {'data-action': txt});
+      }
+      else if (options.autoplayButtonOutput) {
+        console.log("autoplayButtonOutput is true");
+        var currentState =  autoplay ? 'playing' : 'stopped';
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<button class="tns-autoplay" data-action="' + txt + '" aria-label="' + txt + '" >' + txt + '</button>');
+        controllerWrapper.insertAdjacentHTML(getInsertPosition(options.autoplayPosition), '<span class="tns-autoplay-indicator" data-state="' + currentState + '"></span>');
+        autoplayButton = outerWrapper.querySelector('[data-action]');
+        autoplayIndicator = outerWrapper.querySelector('[data-state]');
+      }
+
+      // add event
+      if (autoplayButton) {
+        addEvents(autoplayButton, {
+          'click': toggleAutoplay,
+          'keydown': onControlsKeydown
+          });
+      }
+
+      if (autoplay) {
+        startAutoplay();
+        if (autoplayHoverPause) {
+          addEvents(outerWrapper, hoverEvents);
+        }
+        if (autoplayResetOnVisibility) {
+          addEvents(container, visibilityEvent);
+        }
+      }
+    }
+    else {
+      container.setAttribute('aria-live', 'polite');
+    }
+
     // hide tools if needed
     disableUI();
   }
@@ -1579,10 +1607,22 @@ var tns = function(options) {
       eve[TRANSITIONEND] = onTransitionEnd;
       addEvents(container, eve);
     }
-
+    
+    addEvents(outerWrapper, {
+      'focusin': onContainedFocusChange,
+      'focusout': onContainedFocusChange
+      }
+    );
+    
+    addEvents(innerWrapper, {
+      'keydown': onInnerWrapperKeydown
+    });
+    
     if (touch) { addEvents(container, touchEvents, options.preventScrollOnTouch); }
     if (mouseDrag) { addEvents(container, dragEvents); }
-    if (arrowKeys) { addEvents(doc, docmentKeydownEvent); }
+    // if (arrowKeys) { addEvents(doc, docmentKeydownEvent); }
+    // if (arrowKeys) { addEvents(container, docmentKeydownEvent); }
+    if (arrowKeys) { addEvents(outerWrapper, docmentKeydownEvent); }
 
     if (nested === 'inner') {
       events.on('outerResized', function () {
@@ -1617,15 +1657,19 @@ var tns = function(options) {
     removeEvents(win, {'resize': onResize});
 
     // arrowKeys, controls, nav
-    if (arrowKeys) { removeEvents(doc, docmentKeydownEvent); }
+    if (arrowKeys) { removeEvents(container, docmentKeydownEvent); }
     if (controlsContainer) { removeEvents(controlsContainer, controlsEvents); }
     if (navContainer) { removeEvents(navContainer, navEvents); }
 
     // autoplay
-    removeEvents(container, hoverEvents);
+    removeEvents(outerWrapper, hoverEvents);
     removeEvents(container, visibilityEvent);
-    if (autoplayButton) { removeEvents(autoplayButton, {'click': toggleAutoplay}); }
-    if (autoplay) { clearInterval(autoplayTimer); }
+    if (autoplayButton) {
+      removeEvents(autoplayButton, {'click': toggleAutoplay});
+    }
+    if (autoplay) {
+      clearInterval(autoplayTimer);
+    }
 
     // container
     if (carousel && TRANSITIONEND) {
@@ -1633,8 +1677,12 @@ var tns = function(options) {
       eve[TRANSITIONEND] = onTransitionEnd;
       removeEvents(container, eve);
     }
-    if (touch) { removeEvents(container, touchEvents); }
-    if (mouseDrag) { removeEvents(container, dragEvents); }
+    if (touch) {
+      removeEvents(container, touchEvents);
+    }
+    if (mouseDrag) {
+      removeEvents(container, dragEvents);
+    }
 
     // cache Object values in options && reset HTML
     var htmlList = [containerHTML, controlsContainerHTML, prevButtonHTML, nextButtonHTML, navContainerHTML, autoplayButtonHTML];
@@ -1654,8 +1702,7 @@ var tns = function(options) {
     // reset variables
     tnsList = animateIn = animateOut = animateDelay = animateNormal = horizontal = outerWrapper = innerWrapper = container = containerParent = containerHTML = slideItems = slideCount = breakpointZone = windowWidth = autoWidth = fixedWidth = edgePadding = gutter = viewport = items = slideBy = viewportMax = arrowKeys = speed = rewind = loop = autoHeight = sheet = lazyload = slidePositions = slideItemsOut = cloneCount = slideCountNew = hasRightDeadZone = rightBoundary = updateIndexBeforeTransform = transformAttr = transformPrefix = transformPostfix = getIndexMax = index = indexCached = indexMin = indexMax = resizeTimer = swipeAngle = moveDirectionExpected = running = onInit = events = newContainerClasses = slideId = disable = disabled = freezable = freeze = frozen = controlsEvents = navEvents = hoverEvents = visibilityEvent = docmentKeydownEvent = touchEvents = dragEvents = hasControls = hasNav = navAsThumbnails = hasAutoplay = hasTouch = hasMouseDrag = slideActiveClass = imgCompleteClass = imgEvents = imgsComplete = controls = controlsText = controlsContainer = controlsContainerHTML = prevButton = nextButton = prevIsButton = nextIsButton = nav = navContainer = navContainerHTML = navItems = pages = pagesCached = navClicked = navCurrentIndex = navCurrentIndexCached = navActiveClass = navStr = navStrCurrent = autoplay = autoplayTimeout = autoplayDirection = autoplayText = autoplayHoverPause = autoplayButton = autoplayButtonHTML = autoplayResetOnVisibility = autoplayHtmlStrings = autoplayTimer = animating = autoplayHoverPaused = autoplayUserPaused = autoplayVisibilityPaused = initPosition = lastPosition = translateInit = disX = disY = panStart = rafIndex = getDist = touch = mouseDrag = null;
     // check variables
-    // [animateIn, animateOut, animateDelay, animateNormal, horizontal, outerWrapper, innerWrapper, container, containerParent, containerHTML, slideItems, slideCount, breakpointZone, windowWidth, autoWidth, fixedWidth, edgePadding, gutter, viewport, items, slideBy, viewportMax, arrowKeys, speed, rewind, loop, autoHeight, sheet, lazyload, slidePositions, slideItemsOut, cloneCount, slideCountNew, hasRightDeadZone, rightBoundary, updateIndexBeforeTransform, transformAttr, transformPrefix, transformPostfix, getIndexMax, index, indexCached, indexMin, indexMax, resizeTimer, swipeAngle, moveDirectionExpected, running, onInit, events, newContainerClasses, slideId, disable, disabled, freezable, freeze, frozen, controlsEvents, navEvents, hoverEvents, visibilityEvent, docmentKeydownEvent, touchEvents, dragEvents, hasControls, hasNav, navAsThumbnails, hasAutoplay, hasTouch, hasMouseDrag, slideActiveClass, imgCompleteClass, imgEvents, imgsComplete, controls, controlsText, controlsContainer, controlsContainerHTML, prevButton, nextButton, prevIsButton, nextIsButton, nav, navContainer, navContainerHTML, navItems, pages, pagesCached, navClicked, navCurrentIndex, navCurrentIndexCached, navActiveClass, navStr, navStrCurrent, autoplay, autoplayTimeout, autoplayDirection, autoplayText, autoplayHoverPause, autoplayButton, autoplayButtonHTML, autoplayResetOnVisibility, autoplayHtmlStrings, autoplayTimer, animating, autoplayHoverPaused, autoplayUserPaused, autoplayVisibilityPaused, initPosition, lastPosition, translateInit, disX, disY, panStart, rafIndex, getDist, touch, mouseDrag ].forEach(function(item) { if (item !== null) { console.log(item); } });
-
+    
     for (var a in this) {
       if (a !== 'rebuild') { this[a] = null; }
     }
@@ -1679,7 +1726,6 @@ var tns = function(options) {
     if (responsive) {
       setBreakpointZone();
       bpChanged = breakpointZoneTem !== breakpointZone;
-      // if (hasRightDeadZone) { needContainerTransform = true; } // *?
       if (bpChanged) { events.emit('newBreakpointStart', info(e)); }
     }
 
@@ -1801,8 +1847,8 @@ var tns = function(options) {
 
     if (arrowKeys !== arrowKeysTem) {
       arrowKeys ?
-        addEvents(doc, docmentKeydownEvent) :
-        removeEvents(doc, docmentKeydownEvent);
+        addEvents(container, docmentKeydownEvent) :
+        removeEvents(container, docmentKeydownEvent);
     }
     if (controls !== controlsTem) {
       if (controls) {
@@ -1849,9 +1895,7 @@ var tns = function(options) {
       }
     }
     if (autoplayHoverPause !== autoplayHoverPauseTem) {
-      autoplayHoverPause ?
-        addEvents(container, hoverEvents) :
-        removeEvents(container, hoverEvents);
+      autoplayHoverPause ? addEvents(outerWrapper, hoverEvents) : removeEvents(outerWrapper, hoverEvents);
     }
     if (autoplayResetOnVisibility !== autoplayResetOnVisibilityTem) {
       autoplayResetOnVisibility ?
@@ -1897,7 +1941,6 @@ var tns = function(options) {
     } else if (fixedWidth || autoWidth) {
       doLazyLoad();
       updateSlideStatus();
-      updateLiveRegion();
     }
 
     if (itemsChanged && !carousel) { updateGallerySlidePositions(); }
@@ -2144,20 +2187,11 @@ var tns = function(options) {
     disabled = false;
   }
 
-  function updateLiveRegion () {
-    var str = getLiveRegionStr();
-    if (liveregionCurrent.innerHTML !== str) { liveregionCurrent.innerHTML = str; }
-  }
-
-  function getLiveRegionStr () {
-    var arr = getVisibleSlideRange(),
-        start = arr[0] + 1,
-        end = arr[1] + 1;
-    return start === end ? start + '' : start + ' to ' + end;
-  }
-
   function getVisibleSlideRange (val) {
-    if (val == null) { val = getContainerTransformValue(); }
+    // console.log("inside getVisibleSlideRange");
+    if (val == null) {
+      val = getContainerTransformValue();
+    }
     var start = index, end, rangestart, rangeend;
 
     // get range start, range end for autoWidth and fixedWidth
@@ -2315,7 +2349,6 @@ var tns = function(options) {
   function additionalUpdates () {
     doLazyLoad();
     updateSlideStatus();
-    updateLiveRegion();
     updateControlsStatus();
     updateNavStatus();
   }
@@ -2366,26 +2399,23 @@ var tns = function(options) {
 
   // update slide
   function updateSlideStatus () {
+    console.log("inside updateSlideStatus");
     var range = getVisibleSlideRange(),
         start = range[0],
         end = range[1];
 
     forEach(slideItems, function(item, i) {
-      // show slides
       if (i >= start && i <= end) {
-        if (hasAttr(item, 'aria-hidden')) {
-          removeAttrs(item, ['aria-hidden', 'tabindex']);
-          addClass(item, slideActiveClass);
-        }
+        // show slides
+        removeAttrs(item, ['aria-hidden']);
+        addClass(item, slideActiveClass);
+        setAttrs(item, { 'tabindex': '0' });
+      }
+      else {
       // hide slides
-      } else {
-        if (!hasAttr(item, 'aria-hidden')) {
-          setAttrs(item, {
-            'aria-hidden': 'true',
-            'tabindex': '-1'
-          });
-          removeClass(item, slideActiveClass);
-        }
+        setAttrs(item, { 'aria-hidden': 'true' });
+        removeClass(item, slideActiveClass);
+        setAttrs(item, { 'tabindex': '-1' });
       }
     });
   }
@@ -2437,10 +2467,12 @@ var tns = function(options) {
           'aria-label': navStr + (navCurrentIndexCached + 1)
         });
         removeClass(navPrev, navActiveClass);
+        navPrev.setAttribute('aria-disabled', 'false');
 
         setAttrs(navCurrent, {'aria-label': navStr + (navCurrentIndex + 1) + navStrCurrent});
         removeAttrs(navCurrent, 'tabindex');
         addClass(navCurrent, navActiveClass);
+        navCurrent.setAttribute('aria-disabled', 'true');
 
         navCurrentIndexCached = navCurrentIndex;
       }
@@ -2559,6 +2591,7 @@ var tns = function(options) {
   }
 
   function animateSlide (number, classOut, classIn, isOut) {
+    console.log("inside animateSlide");
     var l = number + items;
     if (!loop) { l = Math.min(l, slideCountNew); }
 
@@ -2618,6 +2651,7 @@ var tns = function(options) {
   })();
 
   function render (e, sliderMoved) {
+    // console.log("inside render");
     if (updateIndexBeforeTransform) { updateIndex(); }
 
     // render when slider was moved (touch or drag) even though index may not change
@@ -2628,9 +2662,13 @@ var tns = function(options) {
       if (autoHeight) { doAutoHeight(); }
 
       // pause autoplay when click or keydown from user
-      if (animating && e && ['click', 'keydown'].indexOf(e.type) >= 0) { stopAutoplay(); }
+      if (animating && e && ['click', 'keydown'].indexOf(e.type) >= 0) {
+        stopAutoplay();
+      }
 
       running = true;
+      container.setAttribute('aria-live', 'off');
+      container.classList.add('tns-animating');
       transformCore();
     }
   }
@@ -2646,6 +2684,60 @@ var tns = function(options) {
     return str.toLowerCase().replace(/-/g, '');
   }
 
+  function onContainerFocusIn (event) {
+    console.log("received focusin");
+  }
+  
+  function onContainerFocusOut (event) {
+    console.log("received focusout");
+  }
+  
+  function onContainedFocusChange(event) {
+    // console.log('----------------');
+    thisContainer = this;
+    // relatedTarget = event.relatedTarget;
+    // console.log('relatedTarget', relatedTarget);
+    // console.log('onContainedFocusChange!!');
+    // console.log('this', this);
+    // console.log('event', event);
+    eventType = event.type;
+    // console.log('eventType', eventType);
+    eventTarget = event.target;
+    // console.log('eventTarget', eventTarget);
+    
+    
+    if ('focusin' === eventType) {
+      previouslyFocusedElement = event.relatedTarget;
+      wasFocusPreviouslyAlreadyInsideContainer = thisContainer.contains(previouslyFocusedElement);
+      if (wasFocusPreviouslyAlreadyInsideContainer) {
+        // console.log('~~~~~~ STILL PAUSE (via focusin) ~~~~ ');
+      }
+      else {
+        // console.log('~~~~~~ PAUSE ~~~~ ');
+        mouseoverPause();
+      }
+    }
+    else if ('focusout' === eventType) {
+      newlyFocusedElement = event.relatedTarget;
+      // console.log('~~~~~~ newlyFocusedElement ~~~~~', newlyFocusedElement);
+      // activeElement = document.activeElement;
+      // console.log('~~~~~~ activeElement ~~~~~', activeElement);
+      
+      isFocusStillInsideContainer = thisContainer.contains(newlyFocusedElement);
+      if (isFocusStillInsideContainer) {
+        // console.log('~~~~~~ STILL PAUSE (via focusout) ~~~~ ');
+      }
+      else {
+        // console.log('~~~~~~ RESUME ~~~~ ');
+        mouseoutRestart();
+      }
+      // console.log('----------------');
+    }
+  }
+  function containerHasAttention() {
+    var containsFocus = outerWrapper.contains(document.activeElement);
+    // 
+  }
   // AFTER TRANSFORM
   // Things need to be done after a transfer:
   // 1. check index
@@ -2655,10 +2747,17 @@ var tns = function(options) {
   // 5. lazyload images
   // 6. update container height
   function onTransitionEnd (event) {
+    // console.log("inside onTransitionEnd");
+    // console.log("autoplayUserPaused", autoplayUserPaused);
+    // console.log("animating", animating);
     // check running on gallery mode
     // make sure trantionend/animationend events run only once
     if (carousel || running) {
       events.emit('transitionEnd', info(event));
+      container.classList.remove('tns-animating');
+      if (!animating) {
+        container.setAttribute('aria-live', 'polite');
+      }
 
       if (!carousel && slideItemsOut.length > 0) {
         for (var i = 0; i < slideItemsOut.length; i++) {
@@ -2698,7 +2797,10 @@ var tns = function(options) {
           }
         }
 
-        if (nested === 'inner') { events.emit('innerLoaded', info()); }
+        if (nested === 'inner') {
+          events.emit('innerLoaded', info());
+        }
+        
         running = false;
         indexCached = index;
       }
@@ -2708,6 +2810,7 @@ var tns = function(options) {
 
   // # ACTIONS
   function goTo (targetIndex, e) {
+    // console.log("inside goTo");
     if (freeze) { return; }
 
     // prev slideBy
@@ -2764,23 +2867,39 @@ var tns = function(options) {
     }
   }
 
-  // on controls click
+  function onPrevNextClick (e, dir) {
+    console.log("inside onPrevNextClick");
+    pause();
+    onControlsClick(e,dir);
+  }
+  
+  // on controls click - badly named because it is triggered not only by user click, but also by automatisms
   function onControlsClick (e, dir) {
+    // console.log("inside onControlsClick");
+    // pause();
     if (running) {
-      if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
+      if (preventActionWhenRunning) {
+        return;
+      }
+      else {
+        onTransitionEnd();
+      }
     }
     var passEventObject;
-
+    // console.log("dir", dir);
     if (!dir) {
+      console.log("inside not-dir. probably either prev or next button clicked");
       e = getEvent(e);
       var target = getTarget(e);
 
       while (target !== controlsContainer && [prevButton, nextButton].indexOf(target) < 0) { target = target.parentNode; }
 
       var targetIn = [prevButton, nextButton].indexOf(target);
+      // console.log("targetIn", targetIn);
       if (targetIn >= 0) {
         passEventObject = true;
         dir = targetIn === 0 ? -1 : 1;
+        // console.log("now dir", dir);
       }
     }
 
@@ -2804,8 +2923,15 @@ var tns = function(options) {
 
   // on nav click
   function onNavClick (e) {
+    // console.log("inside onNavClick");
+    pause();
     if (running) {
-      if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
+      if (preventActionWhenRunning) {
+        return;
+      }
+      else {
+        onTransitionEnd();
+      }
     }
 
     e = getEvent(e);
@@ -2828,31 +2954,64 @@ var tns = function(options) {
 
   // autoplay functions
   function setAutoplayTimer () {
-    autoplayTimer = setInterval(function () {
-      onControlsClick(null, autoplayDirection);
-    }, autoplayTimeout);
-
+    // console.log("inside setAutoplayTimer");
+    if (!autoplayTimer) {
+      autoplayTimer = setInterval(function () {
+        onControlsClick(null, autoplayDirection);
+      }, autoplayTimeout);
+    }
+    
     animating = true;
   }
 
   function stopAutoplayTimer () {
-    clearInterval(autoplayTimer);
+    // console.log("inside stopAutoplayTimer");
+    if (autoplayTimer) {
+      autoplayTimer = clearInterval(autoplayTimer);
+    }
     animating = false;
   }
 
   function updateAutoplayButton (action, txt) {
-    setAttrs(autoplayButton, {'data-action': action});
-    autoplayButton.innerHTML = autoplayHtmlStrings[0] + action + autoplayHtmlStrings[1] + txt;
+    // console.log("inside updateAutoplayButton");
+    // console.log("animating", animating);
+    // console.log("autoplayHoverPaused", autoplayHoverPaused);
+    
+    if (autoplayUserPaused || autoplayHoverPaused) {
+      setAttrs(autoplayIndicator, {'data-state': 'paused'});
+    }
+    else {
+      setAttrs(autoplayIndicator, {'data-state': 'playing'});
+    }
+    
+    if (autoplayUserPaused) {
+      setAttrs(autoplayButton, {'data-action': 'start'});
+      autoplayButton.setAttribute('aria-label', "start carousel");
+      autoplayButton.innerHTML = txt;
+    }
+    else {
+      setAttrs(autoplayButton, {'data-action': 'stop'});
+      autoplayButton.setAttribute('aria-label', "stop carousel");
+      autoplayButton.innerHTML = txt;
+    }
+    
+    
   }
 
   function startAutoplay () {
     setAutoplayTimer();
-    if (autoplayButton) { updateAutoplayButton('stop', autoplayText[1]); }
+    container.setAttribute('aria-live', 'off');
+    if (autoplayButton) {
+      updateAutoplayButton('stop', autoplayText[1]);
+    }
   }
 
   function stopAutoplay () {
     stopAutoplayTimer();
-    if (autoplayButton) { updateAutoplayButton('start', autoplayText[0]); }
+    container.setAttribute('aria-live', 'polite');
+    if (autoplayButton) {
+      updateAutoplayButton('start', autoplayText[0]);
+    }
   }
 
   // programaitcally play/pause the slider
@@ -2870,12 +3029,22 @@ var tns = function(options) {
   }
 
   function toggleAutoplay () {
+    /*
     if (animating) {
       stopAutoplay();
       autoplayUserPaused = true;
     } else {
       startAutoplay();
       autoplayUserPaused = false;
+    }
+    */
+    if (autoplayUserPaused) {
+      autoplayUserPaused = false;
+      startAutoplay();
+    }
+    else {
+      autoplayUserPaused = true;
+      stopAutoplay();
     }
   }
 
@@ -2892,43 +3061,84 @@ var tns = function(options) {
   }
 
   function mouseoverPause () {
+    // console.log("inside mouseoverPause");
     if (animating) {
+      // console.log("@@@@@@@@@@@ is animating!");
       stopAutoplayTimer();
       autoplayHoverPaused = true;
     }
+    
+    if (autoplay) {
+      updateAutoplayButton('start', autoplayText[0]);
+    }
+    
   }
 
   function mouseoutRestart () {
-    if (autoplayHoverPaused) {
+    // console.log("inside mouseoutRestart");
+    if (autoplayHoverPaused && !autoplayUserPaused) {
       setAutoplayTimer();
       autoplayHoverPaused = false;
+      
+      if (autoplay) {
+        updateAutoplayButton('stop', autoplayText[1]);
+      }
+      
     }
   }
 
   // keydown events on document
   function onDocumentKeydown (e) {
+    /*
+    console.log("inside onDocumentKeydown");
     e = getEvent(e);
     var keyIndex = [KEYS.LEFT, KEYS.RIGHT].indexOf(e.keyCode);
 
     if (keyIndex >= 0) {
       onControlsClick(e, keyIndex === 0 ? -1 : 1);
     }
+    */
   }
 
   // on key control
   function onControlsKeydown (e) {
+    console.log("inside onControlsKeydown");
     e = getEvent(e);
     var keyIndex = [KEYS.LEFT, KEYS.RIGHT].indexOf(e.keyCode);
 
     if (keyIndex >= 0) {
       if (keyIndex === 0) {
-        if (!prevButton.disabled) { onControlsClick(e, -1); }
-      } else if (!nextButton.disabled) {
+        // left cursor key pressed
+        if (!prevButton.disabled) {
+          onControlsClick(e, -1);
+        }
+      }
+      else if (!nextButton.disabled) {
+        // right cursor key pressed and nextButton is not disabled
         onControlsClick(e, 1);
       }
+      event.stopPropagation();
+      event.preventDefault();
     }
   }
-
+  
+  function setFocusOnFirstVisibleSlideAndRemoveThisEventListener () {
+    console.log("crzy!!!!!");
+    var firstVisibleSlideItemIndex = getVisibleSlideRange()[0];
+    var firstVisibleSlideItem = slideItems[firstVisibleSlideItemIndex];
+    firstVisibleSlideItem.focus();
+    events.off('transitionEnd', setFocusOnFirstVisibleSlideAndRemoveThisEventListener);
+  }
+  
+  function onInnerWrapperKeydown (event) {
+    console.log("inside onInnerWrapperKeydown");
+    if ([KEYS.LEFT, KEYS.RIGHT].includes(event.keyCode)) {
+      console.log("left or right was pressed. registering callback to set focus on first visible slide once transition animation has finished");
+      events.on('transitionEnd', setFocusOnFirstVisibleSlideAndRemoveThisEventListener);
+    }
+    onControlsKeydown(event);
+  }
+  
   // set focus
   function setFocus (el) {
     el.focus();
@@ -2936,6 +3146,7 @@ var tns = function(options) {
 
   // on key nav
   function onNavKeydown (e) {
+    console.log("inside onNavKeydown");
     e = getEvent(e);
     var curElement = doc.activeElement;
     if (!hasAttr(curElement, 'data-nav')) { return; }
@@ -2946,12 +3157,22 @@ var tns = function(options) {
 
     if (keyIndex >= 0) {
       if (keyIndex === 0) {
-        if (navIndex > 0) { setFocus(navItems[navIndex - 1]); }
-      } else if (keyIndex === 1) {
-        if (navIndex < pages - 1) { setFocus(navItems[navIndex + 1]); }
-      } else {
+        // console.log("nav left");
+        if (navIndex > 0) {
+          setFocus(navItems[navIndex - 1]);
+        }
+      }
+      else if (keyIndex === 1) {
+        // console.log("nav right");
+        if (navIndex < pages - 1) {
+          setFocus(navItems[navIndex + 1]);
+        }
+      }
+      else {
+        console.log("nav enter or space");
         navClicked = navIndex;
-        goTo(navIndex, e);
+        // goTo(navIndex, e);
+        // because enter or space is pressed, click event -> onNavClick will also be triggered
       }
     }
   }
@@ -2977,11 +3198,23 @@ var tns = function(options) {
   }
 
   function onPanStart (e) {
+    container.setAttribute('aria-live', 'off');
+    container.classList.add('tns-animating');
+    // console.log("inside onPanStart");
+ // console.log("autoplay", autoplay);
+ // console.log("animating", animating);
+ // console.log("running", running);
+ // console.log("preventActionWhenRunning", preventActionWhenRunning);
+ // console.log("rafIndex", rafIndex);
+ // console.log("carousel", carousel);
+    
+    
     if (running) {
       if (preventActionWhenRunning) { return; } else { onTransitionEnd(); }
     }
 
-    if (autoplay && animating) { stopAutoplayTimer(); }
+    // if (autoplay && animating) { stopAutoplayTimer(); }
+    stopAutoplayTimer();
 
     panStart = true;
     if (rafIndex) {
@@ -3055,6 +3288,8 @@ var tns = function(options) {
   }
 
   function onPanEnd (e) {
+    // console.log("inside onPanEnd");
+    container.classList.remove('tns-animating');
     if (panStart) {
       if (rafIndex) {
         caf(rafIndex);
@@ -3115,7 +3350,7 @@ var tns = function(options) {
     // reset
     if (options.preventScrollOnTouch === 'auto') { preventScroll = false; }
     if (swipeAngle) { moveDirectionExpected = '?'; }
-    if (autoplay && !animating) { setAutoplayTimer(); }
+    if (autoplay && !animating && !autoplayUserPaused) { setAutoplayTimer(); }
   }
 
   // === RESIZE FUNCTIONS === //
